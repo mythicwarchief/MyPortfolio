@@ -2,6 +2,8 @@
 
 An immersive, interactive portfolio where scrolling doesn't move you down a page. It moves you **forward through a 3D space**, one "moment" at a time, from who I am, to what I can do, to the work I've built.
 
+**Live Site** : https://vaishnav-sunil-nair-portfolio.vercel.app/
+
 ## About me
 
 B.Tech Computer Science and Engineering (Artificial Intelligence) student at Amrita Vishwa Vidyapeetham, Amritapuri Campus. I'm keen on solving real-world business problems using AI and ML, and I like building agents, models and software that do real work.
