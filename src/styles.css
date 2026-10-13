@@ -256,3 +256,6 @@ kbd { font-size: 0.9rem; }
   .chips span { font-size: 0.82rem; }
   .meta { font-size: 0.82rem; }
 }
+
+/* Keep the name on one line at every width. */
+h1 { white-space: nowrap; font-size: clamp(1.6rem, 5vw, 3.4rem); }
