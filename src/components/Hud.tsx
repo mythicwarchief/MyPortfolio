@@ -19,7 +19,7 @@ export default function Hud({ moments, active, onGo, onPulse }: Props) {
         </div>
         <div className="right">
           <button className="pill" onClick={onPulse} aria-label="Pulse the orb">
-            Orb <kbd>Space</kbd>
+            Pulse <kbd>Space</kbd>
           </button>
           <span className="count">
             Moment {active + 1} / {N}

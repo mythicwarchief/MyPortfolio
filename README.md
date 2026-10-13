@@ -2,11 +2,11 @@
 
 An immersive, interactive portfolio where scrolling doesn't move you down a page. It moves you **forward through a 3D space**, one "moment" at a time, from who I am, to what I can do, to the work I've built.
 
-**Live Site** : https://vaishnav-sunil-nair-portfolio.vercel.app/
+**Live site:** https://vaishnav-sunil-nair-portfolio.vercel.app/
 
 ## About me
 
-B.Tech Computer Science and Engineering (Artificial Intelligence) student at Amrita Vishwa Vidyapeetham, Amritapuri Campus. I'm keen on solving real-world business problems using AI and ML, and I like building agents, models and software that do real work.
+Second-year B.Tech Computer Science and Engineering (Artificial Intelligence) student at Amrita Vishwa Vidyapeetham, Amritapuri Campus. I'm keen on solving real-world business problems using AI and ML, and I like building agents, models and software that do real work.
 
 ## What's in the portfolio
 
@@ -23,10 +23,9 @@ B.Tech Computer Science and Engineering (Artificial Intelligence) student at Amr
 
 - **Scroll** to fly forward into the scene. Each section approaches you out of the depth.
 - **Previous / Next**, the **arrow keys** and the **dots** at the bottom jump between moments.
-- **The orb** is interactive: drag it to spin it, and click empty space or press **Space** to send a pulse through it.
-- Move your mouse to tilt the scene slightly.
+- **The orb** is interactive: drag it to turn it gently, and tap or click the background (or press **Space**) to send a pulse through it.
 
-Reduced-motion preferences are respected, and the layout adapts to mobile screens.
+Reduced-motion preferences are respected. The layout adapts from desktop to phone, with the orb moving above the text on portrait screens.
 
 ## Built with
 
@@ -34,6 +33,7 @@ Reduced-motion preferences are respected, and the layout adapts to mobile screen
 - [Three.js](https://threejs.org) for the 3D tunnel, particles and the orb
 - [Vite](https://vite.dev) for the build
 - CSS 3D transforms for the content layers that fly toward you
+- Inter and JetBrains Mono typography on a dark slate palette
 - Hosted on [Vercel](https://vercel.com)
 
 ## How it works

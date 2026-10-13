@@ -33,3 +33,26 @@ export function buildMoments(): Moment[] {
   list.push({ id: "contact", area: "Contact", label: "Contact", kind: "contact" });
   return list;
 }
+
+/** Every morph pattern. Each visit uses a random order, and no pattern repeats within that visit. */
+export type ShapeKey =
+  | "sphere" | "rings" | "torus" | "cube" | "helix" | "grid" | "burst"
+  | "dna" | "octa" | "tetra" | "wave" | "spiral" | "lissajous" | "cylinder"
+  | "flower" | "mobius" | "saddle" | "gyroscope" | "lattice" | "bicone"
+  | "trefoil" | "vortex" | "pinwheel" | "hexagon";
+
+export const ALL_SHAPES: ShapeKey[] = [
+  "sphere", "rings", "torus", "cube", "helix", "grid", "burst",
+  "dna", "octa", "tetra", "wave", "spiral", "lissajous", "cylinder",
+  "flower", "mobius", "saddle", "gyroscope", "lattice", "bicone",
+  "trefoil", "vortex", "pinwheel", "hexagon",
+];
+
+export function morphKeys(moments: Moment[]): ShapeKey[] {
+  const pool = [...ALL_SHAPES];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return moments.map((_, i) => pool[i % pool.length]);
+}

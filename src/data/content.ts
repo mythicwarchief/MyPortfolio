@@ -8,7 +8,12 @@
  */
 
 export type Project = { title: string; blurb: string; tags: string[] };
-export type Skill = { group: string; items: string[]; help: string };
+export type Skill = {
+  group: string;
+  items: string[];
+  help: string;
+  status: "current" | "in-progress" | "next";
+};
 
 export const profile = {
   name: "Vaishnav Sunil Nair",
@@ -33,31 +38,62 @@ export const skills: Skill[] = [
     group: "Languages",
     items: ["Python", "Java", "C"],
     help: "I write the logic, from algorithm-level C to full applications in Java and Python.",
+    status: "current",
   },
   {
     group: "AI and ML",
     items: ["Machine Learning", "Neural Networks", "AI Agents", "Agentic AI"],
     help: "I can build predictive models, neural networks and agent-based systems that handle real tasks.",
+    status: "current",
   },
   {
     group: "Data",
     items: ["NumPy", "Pandas", "Data Processing"],
     help: "I clean, shape and explore data so models and decisions rest on solid ground.",
+    status: "current",
   },
   {
     group: "Development",
     items: ["UI Development", "Full Stack Development", "Backend Development", "Streamlit"],
     help: "I can take an idea from interface to backend, and turn a model into something people can use.",
+    status: "current",
   },
   {
     group: "Frameworks and tools",
     items: ["TensorFlow", "Keras", "Jupyter Notebook", "Linux", "Git", "GitHub", "pytest"],
     help: "I train models, work comfortably on Linux, and keep code versioned and tested.",
+    status: "current",
   },
   {
     group: "Concepts",
     items: ["Object-Oriented Programming", "Algorithm Analysis", "Software Testing"],
     help: "I design clean structures, weigh algorithm trade-offs and test what I build.",
+    status: "current",
+  },
+
+  {
+    group: "Deep learning",
+    items: ["PyTorch", "Backpropagation", "CNNs", "RNNs", "Optimisation"],
+    help: "Moving past using models to understanding how they learn, and building training loops from first principles.",
+    status: "in-progress",
+  },
+  {
+    group: "Transformers",
+    items: ["Self-attention", "Positional encoding", "Encoder-decoder", "Fine-tuning", "Hugging Face"],
+    help: "Learning the architecture behind modern language and vision models, and adapting pretrained models to real tasks.",
+    status: "next",
+  },
+  {
+    group: "LLMs and retrieval",
+    items: ["Embeddings", "Vector search", "RAG", "Prompt design", "Evaluation"],
+    help: "Connecting language models to trusted knowledge, and measuring whether the answers are actually good.",
+    status: "next",
+  },
+  {
+    group: "Agentic AI",
+    items: ["Tool calling", "Planning loops", "Multi-agent systems", "Guardrails"],
+    help: "Designing agents that plan, use tools and hand work over safely, with a person able to step in at any point.",
+    status: "next",
   },
 ];
 
@@ -65,31 +101,31 @@ export const completed: Project[] = [
   {
     title: "Smart Fire Evacuation Planner",
     blurb:
-      "An AI-based evacuation system that finds routes from a starting point to an exit through a predefined building layout. I implemented and compared BFS, Dijkstra's algorithm and A* for route planning and evaluation.",
+      "Proud to share my AI evacuation planner. It finds a route from any starting point to an exit through a building layout. I implemented and compared BFS, Dijkstra's algorithm and A* to see which one plans the best route. When seconds count, search strategy is everything.",
     tags: ["BFS", "Dijkstra's algorithm", "A*"],
   },
   {
     title: "AQI Prediction using Machine Learning",
     blurb:
-      "A machine learning project that forecasts air quality for Indian cities, built on 2015-2020 data from monitoring stations across the country. It studies pollution trends over time and predicts AQI for a chosen city and period, with filters to tailor the results.",
+      "Turned years of monitoring-station data from 2015 to 2020 into a machine learning model that forecasts air quality for Indian cities. It studies pollution trends over time and predicts AQI for any city and period you choose, with filters to tailor the results. Data is only valuable once it helps someone decide something.",
     tags: ["Machine Learning", "Time trends", "AQI"],
   },
   {
     title: "SkillSwap",
     blurb:
-      "A peer-to-peer academic assistance platform where college students can offer and request help in academic subjects, encouraging knowledge sharing and student networking.",
+      "Built SkillSwap, a peer-to-peer platform where college students offer and request help in academic subjects. Students learn best from each other, and this platform makes that exchange easy and encourages a real network of knowledge sharing.",
     tags: ["Peer-to-peer", "Student platform"],
   },
   {
     title: "Digital Complaint Management System",
     blurb:
-      "A complaint management system for submitting, assigning, tracking and updating complaints, with workflows covering users, assigned officers, administrators and resolution status.",
+      "Designed and built a complaint management system in Java that tracks every complaint from submission to resolution. It has clear workflows for users, assigned officers and administrators, because accountability needs a structure people can follow.",
     tags: ["Java", "Workflows"],
   },
   {
     title: "CNN Implementation on MNIST",
     blurb:
-      "A convolutional neural network that recognises handwritten digits from the MNIST dataset, implemented as a command-line application.",
+      "Built a convolutional neural network that recognises handwritten digits from the MNIST dataset, and packaged it as a command-line application. A focused project that showed me how a network learns to see.",
     tags: ["CNN", "MNIST", "Command-line"],
   },
 ];
@@ -98,12 +134,12 @@ export const hackathons: Project[] = [
   {
     title: "NyayaBot",
     blurb:
-      "An agentic AI project built for the Epochon 2.0 hackathon at Amrita Vishwa Vidyapeetham, applying AI agents to legal-domain tasks.",
+      "Built NyayaBot for the Epochon 2.0 hackathon at Amrita Vishwa Vidyapeetham, an agentic AI system that applies AI agents to legal-domain tasks. A hackathon forces you to turn an idea into a working system under pressure, and this one got me thinking in agents.",
     tags: ["Epochon 2.0, 2026", "Agentic AI", "Legal domain"],
   },
   {
     title: "Nirikshan",
-    blurb: "A hackathon project developed as part of Smart India Hackathon 2026.",
+    blurb: "Proud to have built Nirikshan for Smart India Hackathon 2026, one of the country's largest national innovation challenges. Working on a real problem statement with a team pushed my engineering in every direction.",
     tags: ["Smart India Hackathon 2026"],
   },
 ];
@@ -112,7 +148,7 @@ export const ongoing: Project[] = [
   {
     title: "Intelligent Ledger Orchestration System",
     blurb:
-      "A ledger orchestration system with a human-in-the-loop protocol, so that sanction decisions are reviewed and approved by a person.",
+      "Currently building an intelligent ledger orchestration system with a human-in-the-loop protocol, so every sanction decision is reviewed and approved by a person. Automation should speed up decisions, never remove accountability.",
     tags: ["Human-in-the-loop", "In progress"],
   },
 ];

@@ -17,10 +17,8 @@ export default function MomentView({ m }: { m: Moment }) {
       return (
         <>
           <h1>{profile.name}</h1>
-          <p className="lead">
-            <em>{profile.role}</em>
-          </p>
-          <p className="hint">Scroll to fly in. Drag the orb, click empty space or press Space to pulse it.</p>
+          <p className="lead">{profile.role}</p>
+          <p className="hint">Scroll or press Next to move through. Drag the orb, or tap the background to pulse it.</p>
         </>
       );
     case "about":
@@ -52,7 +50,13 @@ export default function MomentView({ m }: { m: Moment }) {
     case "skill":
       return (
         <>
-          <div className="kicker">Skills</div>
+          <div className="kicker">
+            {m.skill.status === "current"
+              ? "Skills"
+              : m.skill.status === "in-progress"
+              ? "Learning path · In progress"
+              : "Learning path · Up next"}
+          </div>
           <h2>{m.skill.group}</h2>
           <Chips items={m.skill.items} />
           <p>{m.skill.help}</p>
@@ -97,6 +101,9 @@ export default function MomentView({ m }: { m: Moment }) {
           </a>
           <a className="btn alt" href={profile.linkedin} target="_blank" rel="noopener noreferrer">
             LinkedIn
+          </a>
+          <a className="btn alt" href="/Vaishnav_Sunil_Nair_CV.pdf" download="Vaishnav_Sunil_Nair_CV.pdf">
+            Download CV
           </a>
         </>
       );

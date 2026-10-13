@@ -1,26 +1,29 @@
 import { useEffect, useRef } from "react";
 import type { MutableRefObject } from "react";
 import * as THREE from "three";
-import { SPACING, WORLD_K } from "../constants";
+import { SPACING } from "../constants";
+import { layoutFor, mixLayout } from "../layout";
+import { N, makeShape } from "../morph";
+import type { ShapeKey } from "../moments";
 
 type Props = {
   camRef: MutableRefObject<number>;
   pointerRef: MutableRefObject<{ x: number; y: number }>;
   pulseRef: MutableRefObject<number>;
   total: number;
-  count: number;
+  keys: ShapeKey[];
 };
 
-const BRASS = 0xc9a45c;
-const SAGE = 0x8fa38a;
-const CREAM = 0xefe4d0;
+const ACCENT = 0x7dd3fc;
+const ACCENT_2 = 0xa5b4fc;
+const PINK = 0xf0abfc;
 
 /**
- * Background world + the interactive "neural orb".
- * The orb stays in front of the camera as you fly. Drag it to spin it,
- * click empty space or press Space to send a pulse through it.
+ * One point-and-line shape that morphs between sections, like PowerPoint's Morph transition.
+ * Scrolling drives the morph: at each section the shape is the one for that section, and between
+ * two sections every point glides from its place in one shape to its place in the next.
  */
-export default function Scene({ camRef, pointerRef, pulseRef, total, count }: Props) {
+export default function Scene({ camRef, pointerRef, pulseRef, keys }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -29,76 +32,79 @@ export default function Scene({ camRef, pointerRef, pulseRef, total, count }: Pr
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(70, 1, 0.1, 400);
-    const L = total * WORLD_K + 120;
 
-    // Drifting particles along the whole flight path.
-    const n = 1400;
-    const pos = new Float32Array(n * 3);
-    const col = new Float32Array(n * 3);
-    const palette = [new THREE.Color(BRASS), new THREE.Color(CREAM), new THREE.Color(SAGE)];
-    for (let i = 0; i < n; i++) {
-      const a = Math.random() * Math.PI * 2;
-      const r = 6 + Math.random() * 34;
-      pos.set([Math.cos(a) * r, Math.sin(a) * r, 40 - Math.random() * L], i * 3);
-      const c = palette[i % 3];
-      col.set([c.r, c.g, c.b], i * 3);
+    // Precompute every shape once. Point k always means the same thing, so morphs stay consistent.
+    const shapes = keys.map((k) => makeShape(k));
+    const current = new Float32Array(N * 3);
+    current.set(shapes[0]);
+    const posAttr = new THREE.BufferAttribute(current, 3);
+
+    // Colour gradient along the path: sky, then indigo, then pink.
+    const colors = new Float32Array(N * 3);
+    const c1 = new THREE.Color(ACCENT);
+    const c2 = new THREE.Color(ACCENT_2);
+    const c3 = new THREE.Color(PINK);
+    for (let k = 0; k < N; k++) {
+      const t = k / (N - 1);
+      const c = t < 0.5 ? c1.clone().lerp(c2, t * 2) : c2.clone().lerp(c3, (t - 0.5) * 2);
+      colors.set([c.r, c.g, c.b], k * 3);
     }
-    const pg = new THREE.BufferGeometry();
-    pg.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    pg.setAttribute("color", new THREE.BufferAttribute(col, 3));
-    scene.add(
-      new THREE.Points(pg, new THREE.PointsMaterial({ size: 0.35, vertexColors: true, transparent: true, opacity: 0.8 }))
+    const colorAttr = new THREE.BufferAttribute(colors, 3);
+
+    const pointGeo = new THREE.BufferGeometry();
+    pointGeo.setAttribute("position", posAttr);
+    pointGeo.setAttribute("color", colorAttr);
+
+    // Connect each point to the next one, so the shape reads as a single flowing line.
+    const linePairs = new Uint16Array((N - 1) * 2);
+    for (let k = 0; k < N - 1; k++) {
+      linePairs[k * 2] = k;
+      linePairs[k * 2 + 1] = k + 1;
+    }
+    const lineGeo = new THREE.BufferGeometry();
+    lineGeo.setAttribute("position", posAttr);
+    lineGeo.setAttribute("color", colorAttr);
+    lineGeo.setIndex(new THREE.BufferAttribute(linePairs, 1));
+
+    const group = new THREE.Group();
+    const points = new THREE.Points(
+      pointGeo,
+      new THREE.PointsMaterial({ size: 0.13, vertexColors: true, transparent: true, opacity: 0.95 })
+    );
+    const lines = new THREE.LineSegments(
+      lineGeo,
+      new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.5 })
     );
 
-    // One gate ring per moment.
-    const gates: THREE.Mesh[] = [];
-    for (let i = 0; i < count; i++) {
-      const m = new THREE.Mesh(
-        new THREE.TorusGeometry(9, 0.05, 8, 64),
-        new THREE.MeshBasicMaterial({ color: BRASS, transparent: true, opacity: 0.3 })
-      );
-      m.position.z = -i * SPACING * WORLD_K - 8;
-      scene.add(m);
-      gates.push(m);
-    }
-
-    // Floating wireframe crystals.
-    const gems: THREE.Mesh[] = [];
-    for (let i = 0; i < 14; i++) {
-      const m = new THREE.Mesh(
-        new THREE.IcosahedronGeometry(1.2 + Math.random(), 0),
-        new THREE.MeshBasicMaterial({ color: i % 2 ? SAGE : BRASS, wireframe: true, transparent: true, opacity: 0.4 })
-      );
-      const a = Math.random() * Math.PI * 2;
-      const r = 12 + Math.random() * 10;
-      m.position.set(Math.cos(a) * r, Math.sin(a) * r, -Math.random() * L);
-      scene.add(m);
-      gems.push(m);
-    }
-
-    // The neural orb.
-    const orb = new THREE.Group();
-    const shell = new THREE.IcosahedronGeometry(3.2, 2);
-    const wire = new THREE.LineSegments(
-      new THREE.WireframeGeometry(shell),
-      new THREE.LineBasicMaterial({ color: BRASS, transparent: true, opacity: 0.5 })
+    // Soft glow behind the shape: a radial gradient sprite, no particles.
+    const hc = document.createElement("canvas");
+    hc.width = hc.height = 256;
+    const hx = hc.getContext("2d")!;
+    const grd = hx.createRadialGradient(128, 128, 0, 128, 128, 128);
+    grd.addColorStop(0, "rgba(125,211,252,0.5)");
+    grd.addColorStop(0.45, "rgba(165,180,252,0.16)");
+    grd.addColorStop(1, "rgba(165,180,252,0)");
+    hx.fillStyle = grd;
+    hx.fillRect(0, 0, 256, 256);
+    const halo = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: new THREE.CanvasTexture(hc),
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      })
     );
-    const nodes = new THREE.Points(shell, new THREE.PointsMaterial({ color: CREAM, size: 0.13 }));
-    const inner = new THREE.LineSegments(
-      new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(1.9, 1)),
-      new THREE.LineBasicMaterial({ color: SAGE, transparent: true, opacity: 0.6 })
-    );
-    const coreMat = new THREE.MeshBasicMaterial({ color: BRASS, transparent: true, opacity: 0.35 });
-    const core = new THREE.Mesh(new THREE.SphereGeometry(1.0, 24, 24), coreMat);
-    orb.add(wire, nodes, inner, core);
-    scene.add(orb);
+    halo.scale.setScalar(11);
 
-    // Pulse rings that expand from the orb.
+    group.add(halo, points, lines);
+    scene.add(group);
+
+    // Pulse rings: one per tap.
     const waves: { mesh: THREE.Mesh; born: number }[] = [];
     let seenPulse = pulseRef.current;
     let pulseVal = 0;
 
-    // Drag to spin; a tap on empty space pulses.
+    // Drag turns the group with a small, quickly damped spin.
     let dragging = false;
     let moved = 0;
     let last = { x: 0, y: 0 };
@@ -114,12 +120,12 @@ export default function Scene({ camRef, pointerRef, pulseRef, total, count }: Pr
       const dx = e.clientX - last.x;
       const dy = e.clientY - last.y;
       moved += Math.abs(dx) + Math.abs(dy);
-      vel.y = dx * 0.01;
-      vel.x = dy * 0.01;
+      vel.y = Math.max(-0.03, Math.min(0.03, dx * 0.003));
+      vel.x = Math.max(-0.03, Math.min(0.03, dy * 0.003));
       last = { x: e.clientX, y: e.clientY };
     };
     const onUp = () => {
-      if (dragging && moved < 5) pulseRef.current += 1;
+      if (dragging && moved < 6) pulseRef.current += 1;
       dragging = false;
     };
     window.addEventListener("pointerdown", onDown);
@@ -136,56 +142,65 @@ export default function Scene({ camRef, pointerRef, pulseRef, total, count }: Pr
 
     let raf = 0;
     const loop = (t: number) => {
-      const tx = pointerRef.current.x;
-      const ty = pointerRef.current.y;
-      camera.position.set(tx * 3, -ty * 2, -camRef.current * WORLD_K);
+      const px = pointerRef.current.x;
+      const py = pointerRef.current.y;
+      camera.position.set(px * 1.2, -py * 0.8, 0);
 
-      const wide = camera.aspect > 1.1;
-      orb.position.set(wide ? 6.8 : 0, wide ? -0.4 : 2.6, camera.position.z - 15);
-      orb.rotation.y += vel.y + 0.003;
-      orb.rotation.x += vel.x;
-      if (!dragging) {
-        vel.x *= 0.95;
-        vel.y *= 0.95;
+      // Morph: the position between two slides, from App's smoothed scroll value.
+      const W = window.innerWidth;
+      const H = window.innerHeight;
+      const p = Math.max(0, Math.min(keys.length - 1, camRef.current / SPACING));
+      const i = Math.min(keys.length - 2, Math.floor(p));
+      const f = p - i;
+      const e = f * f * (3 - 2 * f);
+      if (keys.length > 1) {
+        const A = shapes[i];
+        const B = shapes[i + 1];
+        for (let q = 0; q < N * 3; q++) current[q] = A[q] + (B[q] - A[q]) * e;
+        posAttr.needsUpdate = true;
       }
-      inner.rotation.y -= 0.006;
+      // The orb follows the same layout as the content block, so it crosses to the other side.
+      const L = mixLayout(layoutFor(i, W, H), layoutFor(i + 1, W, H), e);
+      const baseScale = L.orbScale;
+      group.position.set(L.orbX, L.orbY, -15);
 
+      // Idle turn plus damped drag spin.
+      group.rotation.y += vel.y + 0.0008;
+      group.rotation.x += vel.x;
+      if (!dragging) {
+        vel.x *= 0.9;
+        vel.y *= 0.9;
+      }
+
+      // Pulse: a soft swell and one ring.
       if (pulseRef.current !== seenPulse) {
         seenPulse = pulseRef.current;
         pulseVal = 1;
         const mesh = new THREE.Mesh(
-          new THREE.TorusGeometry(3.4, 0.05, 8, 64),
-          new THREE.MeshBasicMaterial({ color: CREAM, transparent: true, opacity: 0.8 })
+          new THREE.TorusGeometry(3.4, 0.04, 8, 96),
+          new THREE.MeshBasicMaterial({ color: ACCENT, transparent: true, opacity: 0.7 })
         );
-        mesh.position.copy(orb.position);
+        mesh.position.copy(group.position);
         scene.add(mesh);
         waves.push({ mesh, born: t });
       }
-      pulseVal *= 0.94;
-      orb.scale.setScalar(1 + pulseVal * 0.22);
-      coreMat.opacity = 0.35 + pulseVal * 0.5;
-      for (let i = waves.length - 1; i >= 0; i--) {
-        const w = waves[i];
-        const age = (t - w.born) / 1100;
+      pulseVal *= 0.9;
+      group.scale.setScalar(baseScale * (1 + pulseVal * 0.05));
+      for (let k = waves.length - 1; k >= 0; k--) {
+        const w = waves[k];
+        const age = (t - w.born) / 1400;
         if (age >= 1) {
           scene.remove(w.mesh);
           w.mesh.geometry.dispose();
           (w.mesh.material as THREE.Material).dispose();
-          waves.splice(i, 1);
+          waves.splice(k, 1);
           continue;
         }
-        w.mesh.position.copy(orb.position);
-        w.mesh.scale.setScalar(1 + age * 3.5);
-        (w.mesh.material as THREE.MeshBasicMaterial).opacity = 0.8 * (1 - age);
+        w.mesh.position.copy(group.position);
+        w.mesh.scale.setScalar(baseScale * (1 + age * 1.4));
+        (w.mesh.material as THREE.MeshBasicMaterial).opacity = 0.7 * (1 - age);
       }
 
-      gems.forEach((m, i) => {
-        m.rotation.x = t * 0.0003 + i;
-        m.rotation.y = t * 0.0004 + i;
-      });
-      gates.forEach((m, i) => {
-        m.rotation.z = t * 0.0002 * (i % 2 ? 1 : -1);
-      });
       renderer.render(scene, camera);
       raf = requestAnimationFrame(loop);
     };
@@ -206,7 +221,7 @@ export default function Scene({ camRef, pointerRef, pulseRef, total, count }: Pr
       });
       renderer.dispose();
     };
-  }, [camRef, pointerRef, pulseRef, total, count]);
+  }, [camRef, pointerRef, pulseRef, keys]);
 
   return <canvas ref={canvasRef} className="gl" aria-hidden="true" />;
 }
